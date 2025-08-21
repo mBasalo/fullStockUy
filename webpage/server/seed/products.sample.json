@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Monopatín Eléctrico KDS-DC22",
+    "priceUSD": 749,
+    "stock": 5,
+    "image": "/kds-dc22.jpg",
+    "description": "Potencia, autonomía y estilo.",
+    "sku": "KDS-DC22",
+    "category": "movilidad"
+  },
+  {
+    "name": "Bicicleta Eléctrica Queen 26",
+    "priceUSD": 899,
+    "stock": 3,
+    "image": "/queen26.jpg",
+    "description": "Diseño cómodo y eficiente.",
+    "sku": "QUEEN-26",
+    "category": "movilidad"
+  }
+]
