@@ -1,3 +1,4 @@
+// server/models/Order.js
 import mongoose from "mongoose";
 
 const OrderItemSchema = new mongoose.Schema(
@@ -15,7 +16,8 @@ const OrderSchema = new mongoose.Schema(
     orderId: { type: String, index: true },
     customer: {
       name: { type: String, required: true },
-      phone: { type: String, required: true }
+      phone: { type: String, required: true },
+      email: { type: String, default: "" }
     },
     notes: { type: String, default: "" },
     items: [OrderItemSchema],

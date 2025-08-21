@@ -1,3 +1,4 @@
+// client/src/App.jsx
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Product from "./pages/Product";
@@ -9,7 +10,7 @@ import Returns from "./pages/legal/Returns";
 import Shipping from "./pages/legal/Shipping";
 import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
-
+import Order from "./pages/Order";
 
 // Admin
 import AdminLogin from "./pages/admin/Login";
@@ -35,20 +36,21 @@ export default function App() {
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order/:id" element={<Order />} />
 
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/products" element={<ProductsAdmin />} />
           <Route path="/admin/orders" element={<OrdersAdmin />} />
 
-                  <Route path="/privacidad" element={<Privacy />} />
-        <Route path="/terminos" element={<Terms />} />
-        <Route path="/devoluciones" element={<Returns />} />
-        <Route path="/envios" element={<Shipping />} />
-        <Route path="/contacto" element={<Contact />} />
+          <Route path="/privacidad" element={<Privacy />} />
+          <Route path="/terminos" element={<Terms />} />
+          <Route path="/devoluciones" element={<Returns />} />
+          <Route path="/envios" element={<Shipping />} />
+          <Route path="/contacto" element={<Contact />} />
         </Routes>
 
-              <Footer />
-        </AdminProvider>
+        <Footer />
+      </AdminProvider>
     </main>
   );
 }
