@@ -3,6 +3,13 @@ import Home from "./pages/Home";
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Privacy from "./pages/legal/Privacy";
+import Terms from "./pages/legal/Terms";
+import Returns from "./pages/legal/Returns";
+import Shipping from "./pages/legal/Shipping";
+import Contact from "./pages/Contact";
+import Footer from "./components/Footer";
+
 
 // Admin
 import AdminLogin from "./pages/admin/Login";
@@ -32,8 +39,16 @@ export default function App() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/products" element={<ProductsAdmin />} />
           <Route path="/admin/orders" element={<OrdersAdmin />} />
+
+                  <Route path="/privacidad" element={<Privacy />} />
+        <Route path="/terminos" element={<Terms />} />
+        <Route path="/devoluciones" element={<Returns />} />
+        <Route path="/envios" element={<Shipping />} />
+        <Route path="/contacto" element={<Contact />} />
         </Routes>
-      </AdminProvider>
+
+              <Footer />
+        </AdminProvider>
     </main>
   );
 }
