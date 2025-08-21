@@ -23,8 +23,8 @@ export default function Footer() {
           <h4 className="font-bold mb-2">Contacto</h4>
           <ul className="space-y-1">
             <li><Link to="/contacto">Formulario</Link></li>
-            <li><span>📧 contacto@fullstock.com</span></li>
-            <li><span>📞 +598 98 671 812</span></li>
+            <li><span>Correo: fullstock.uruguay@gmail.com</span></li>
+            <li><span>Telefono: +598 98 671 812</span></li>
           </ul>
         </div>
       </div>

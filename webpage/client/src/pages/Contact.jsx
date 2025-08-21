@@ -1,86 +1,90 @@
-// client/src/pages/Contact.jsx
-import React, { useState } from "react";
+import { useState } from 'react';
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
-  const [status, setStatus] = useState({ loading: false, ok: null, msg: "" });
+  const [form, setForm] = useState({ name: '', email: '', message: '', phone: '' });
+  const [status, setStatus] = useState({ type: 'idle', text: '' });
 
-  const handleChange = (e) => {
+  const onChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ loading: true, ok: null, msg: "" });
+
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setStatus({ type: 'error', text: 'Completá nombre, email y mensaje.' });
+      return;
+    }
+
+    setStatus({ type: 'loading', text: 'Enviando…' });
+
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
       });
-      const data = await res.json();
-      if (res.ok) {
-        setStatus({ loading: false, ok: true, msg: data.message });
-        setForm({ name: "", email: "", phone: "", message: "" });
+
+      const contentType = resp.headers.get('content-type') || '';
+      let data = null;
+
+      if (contentType.includes('application/json')) {
+        data = await resp.json();
       } else {
-        throw new Error(data.message || "Algo salió mal.");
+        const text = await resp.text();
+        try { data = JSON.parse(text); }
+        catch { data = { success: false, error: text || 'Respuesta no JSON del servidor.' }; }
       }
-    } catch (err) {
-      setStatus({ loading: false, ok: false, msg: err.message });
+
+      if (!resp.ok || !data?.success) {
+        const msg = data?.error || `Error ${resp.status}: No se pudo enviar el mensaje.`;
+        setStatus({ type: 'error', text: msg });
+        return;
+      }
+
+      setStatus({ type: 'success', text: data.message || 'Mensaje enviado con éxito.' });
+      setForm({ name: '', email: '', message: '', phone: '' });
+    } catch {
+      setStatus({ type: 'error', text: 'No se pudo conectar con el servidor. Intenta más tarde.' });
     }
   };
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">Contacto</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          className="w-full border p-2"
-          type="text"
-          name="name"
-          placeholder="Nombre"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          className="w-full border p-2"
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          className="w-full border p-2"
-          type="text"
-          name="phone"
-          placeholder="Teléfono (opcional)"
-          value={form.phone}
-          onChange={handleChange}
-        />
-        <textarea
-          className="w-full border p-2"
-          name="message"
-          placeholder="Mensaje"
-          rows="5"
-          value={form.message}
-          onChange={handleChange}
-          required
-        />
-        <button
-          type="submit"
-          disabled={status.loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {status.loading ? "Enviando..." : "Enviar"}
+    <div style={{ maxWidth: 640, margin: '0 auto', padding: '2rem 1rem' }}>
+      <h1>Contacto</h1>
+
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
+        <div>
+          <label htmlFor="name">Nombre</label>
+          <input id="name" name="name" type="text" value={form.name} onChange={onChange} required />
+        </div>
+
+        <div>
+          <label htmlFor="email">Email</label>
+          <input id="email" name="email" type="email" value={form.email} onChange={onChange} required />
+        </div>
+
+        <div>
+          <label htmlFor="phone">Teléfono (opcional)</label>
+          <input id="phone" name="phone" type="tel" value={form.phone} onChange={onChange} />
+        </div>
+
+        <div>
+          <label htmlFor="message">Mensaje</label>
+          <textarea id="message" name="message" rows={6} value={form.message} onChange={onChange} required />
+        </div>
+
+        <button type="submit" disabled={status.type === 'loading'}>
+          {status.type === 'loading' ? 'Enviando…' : 'Enviar'}
         </button>
       </form>
-      {status.msg && (
-        <p className={`mt-4 ${status.ok ? "text-green-600" : "text-red-600"}`}>{status.msg}</p>
+
+      {status.type !== 'idle' && (
+        <p style={{ marginTop: '1rem', color: status.type === 'error' ? 'crimson' : 'green' }}>
+          {status.text}
+        </p>
       )}
-    </main>
+    </div>
   );
 }

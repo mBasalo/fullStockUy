@@ -1,43 +1,41 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import cors from 'cors';
 
-import { connectDB } from "./db.js";
-import productsRouter from "./routes/products.js";
-import ordersRouter from "./routes/orders.js";
-import adminRouter from "./routes/admin.js";
+import productsRouter from './routes/products.js';
+import ordersRouter from './routes/orders.js';
+import adminRouter from './routes/admin.js';
+import contactRouter from './routes/contact.js';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// carpeta de uploads (asegurarnos de que exista)
+// Middlewares
+app.use(cors());
+app.use(express.json()); // parsea JSON antes de las rutas
+
+// Conexión a MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch((err) => console.error('❌ Error conectando a MongoDB:', err));
+
+// Rutas API
+app.use('/api/products', productsRouter);
+app.use('/api/orders', ordersRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/contact', contactRouter); // ← NUEVA ruta de contacto
+
+// Estáticos (subidas)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// servir archivos estáticos de /uploads
-app.use("/uploads", express.static(uploadsDir));
-
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
-
-app.use("/api/products", productsRouter);
-app.use("/api/orders", ordersRouter);
-app.use("/api/admin", adminRouter); // rutas del panel admin (incluye /upload)
-
+// Levantar server
 const PORT = process.env.PORT || 4000;
-
-connectDB(process.env.MONGODB_URI)
-  .then(() => {
-    app.listen(PORT, () => console.log(`✅ API running on http://localhost:${PORT}`));
-  })
-  .catch(err => {
-    console.error("❌ Error conectando a MongoDB:", err.message);
-    process.exit(1);
-  });
+app.listen(PORT, () => console.log(`✅ API running on http://localhost:${PORT}`));

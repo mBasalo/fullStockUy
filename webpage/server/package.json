@@ -1,9 +1,12 @@
 {
   "name": "fullstock-server",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
+  "description": "Backend API for Fullstock",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node ./seed/seed.js"
   },
@@ -12,9 +15,10 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.5.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^6.9.13"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.10"
   }
 }
