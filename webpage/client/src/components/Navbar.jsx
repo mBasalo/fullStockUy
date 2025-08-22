@@ -1,43 +1,51 @@
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMotorcycle,
   faBicycle,
-  faSkating,        // monopatines (fallback v5)
-  faTools,          // accesorios (fallback v5)
-  faSearch,         // buscador (fallback v5)
+  faSkating,
+  faTools,
+  faSearch,
   faPhone,
-  faShoppingCart    // carrito (fallback v5)
-} from '@fortawesome/free-solid-svg-icons';
-import { faInstagram } from '@fortawesome/free-brands-svg-icons';
-import { CATEGORIES } from '../constants/categories';
-import logo from '../assets/logo-fullstock.png'
+  faShoppingCart,
+  faList,
+  faBars,     // hamburguesa
+  faTimes     // cerrar
+} from "@fortawesome/free-solid-svg-icons";
+import { faInstagram } from "@fortawesome/free-brands-svg-icons";
+import { CATEGORIES } from "../constants/categories";
+import logo from "../assets/logo-fullstock.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [q, setQ] = useState(params.get('q') || '');
+  const [q, setQ] = useState(params.get("q") || "");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    setQ(params.get('q') || '');
+    setQ(params.get("q") || "");
   }, [params]);
 
   const goCategory = (key) => {
     const next = new URLSearchParams(params);
-    if (key) next.set('category', key); else next.delete('category');
-    navigate({ pathname: '/', search: next.toString() });
+    if (key) next.set("category", key);
+    else next.delete("category");
+    navigate({ pathname: "/", search: next.toString() });
+    setMenuOpen(false); // cerrar menú en mobile
   };
 
   const onSearch = (e) => {
     e.preventDefault();
     const next = new URLSearchParams(params);
-    if (q?.trim()) next.set('q', q.trim()); else next.delete('q');
-    navigate({ pathname: '/', search: next.toString() });
+    if (q?.trim()) next.set("q", q.trim());
+    else next.delete("q");
+    navigate({ pathname: "/", search: next.toString() });
   };
 
   return (
     <header className="ws-header">
+      {/* 🔹 Top bar */}
       <div className="ws-top">
         <Link to="/" className="ws-logo">
           <img src={logo} alt="FullStockUY" height="50" />
@@ -74,43 +82,39 @@ export default function Navbar() {
           <Link className="ws-quick-item" to="/cart" aria-label="Carrito" title="Carrito">
             <FontAwesomeIcon icon={faShoppingCart} />
           </Link>
+
+          {/* 🔹 Botón hamburguesa (visible solo en mobile) */}
+          {/* <button
+            className="ws-burger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Abrir menú"
+          >
+            <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
+          </button> */}
         </nav>
       </div>
 
-      <div className="ws-cats">
+      {/* 🔹 Categorías (desktop siempre visibles, mobile colapsables) */}
+      <div className={`ws-cats ${menuOpen ? "open" : ""}`}>
+        <button onClick={() => goCategory(null)} className="ws-cat">
+          <span className="ws-cat-icon">
+            <FontAwesomeIcon icon={faList} />
+          </span>
+          <span>Todos</span>
+        </button>
+
         {CATEGORIES.map((c) => (
           <button key={c.key} onClick={() => goCategory(c.key)} className="ws-cat">
             <span className="ws-cat-icon">
-              {c.key === 'motos'        && <FontAwesomeIcon icon={faMotorcycle} />}
-              {c.key === 'bicicletas'   && <FontAwesomeIcon icon={faBicycle} />}
-              {c.key === 'monopatines'  && <FontAwesomeIcon icon={faSkating} />}
-              {c.key === 'accesorios'   && <FontAwesomeIcon icon={faTools} />}
+              {c.key === "motos" && <FontAwesomeIcon icon={faMotorcycle} />}
+              {c.key === "bicicletas" && <FontAwesomeIcon icon={faBicycle} />}
+              {c.key === "monopatines" && <FontAwesomeIcon icon={faSkating} />}
+              {c.key === "accesorios" && <FontAwesomeIcon icon={faTools} />}
             </span>
             <span>{c.label}</span>
           </button>
         ))}
       </div>
-
-      {/* estilos mínimos (podés moverlos a tu CSS global) */}
-      <style>{`
-        .ws-header { background:#fff; border-bottom:1px solid #eee; }
-        .ws-top { display:flex; align-items:center; gap:1rem; padding:.75rem 1rem; }
-        .ws-logo img { display:block; }
-
-        .ws-search { flex:1; display:flex; align-items:stretch; max-width:700px; margin:0 auto; }
-        .ws-search input { flex:1; padding:.6rem .8rem; border:1px solid #ddd; border-right:none; border-radius:8px 0 0 8px; }
-        .ws-search button { padding:0 .9rem; border:1px solid #ddd; border-left:none; background:#f7f7f7; border-radius:0 8px 8px 0; cursor:pointer; }
-
-        .ws-quick { display:flex; align-items:center; gap:.75rem; }
-        .ws-quick-item { display:flex; align-items:center; gap:.5rem; font-weight:600; color:#222; text-decoration:none; }
-        .ws-phone { display:none; }
-        @media (min-width: 720px){ .ws-phone { display:inline } }
-
-        .ws-cats { background:#1e1e1e; color:#fff; display:flex; gap:1.25rem; padding:.7rem 1rem; border-radius:10px; margin:0 1rem 1rem; overflow:auto; }
-        .ws-cat { background:transparent; color:#fff; border:none; display:flex; gap:.5rem; align-items:center; cursor:pointer; padding:.4rem .6rem; border-radius:8px; white-space:nowrap; }
-        .ws-cat:hover { background:#2a2a2a; }
-        .ws-cat-icon { width:22px; display:inline-flex; justify-content:center; }
-      `}</style>
     </header>
   );
 }
