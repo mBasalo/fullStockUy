@@ -873,6 +873,7 @@ button { font: inherit; cursor: pointer; }
   overflow: hidden;
   transition: transform .18s ease, box-shadow .18s ease;
   min-height: 360px;
+  bor
 }
 .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.08); }
 .product-thumb { height: 180px; display: flex; justify-content: center; align-items: center; }
