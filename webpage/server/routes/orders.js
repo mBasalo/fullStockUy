@@ -1,6 +1,6 @@
 // server/routes/orders.js
 import { Router } from "express";
-import { Product } from "../models/Product.js";
+import Product from "../models/Product.js"; // ✅
 import { Order } from "../models/Order.js";
 import { sendMail, getAdminEmail } from "../utils/mailer.js";
 import { orderHtml, orderText } from "../emails/orderTemplate.js";

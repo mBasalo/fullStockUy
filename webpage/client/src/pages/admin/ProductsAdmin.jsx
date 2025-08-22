@@ -1,171 +1,282 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAdmin } from "../../admin/Auth";
+import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { CATEGORIES } from '../../constants/categories';
 
-const empty = { name:"", priceUSD:"", stock:"", image:"", description:"", sku:"", category:"" };
+const getAdminToken = () =>
+  localStorage.getItem('admin_token') ||
+  localStorage.getItem('adminToken') ||
+  '';
 
-function AdminBar({ onLogout }){
-  return (
-    <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:12 }}>
-      <Link to="/admin/products">Productos</Link>
-      <Link to="/admin/orders">Órdenes</Link>
-      {/* <button onClick={onLogout} className="btn-outline" style={{ marginLeft:"auto" }}>Cerrar sesión</button> */}
-    </div>
-  );
-}
+const api = axios.create({
+  baseURL: '/api/admin',
+  headers: { 'x-admin-token': getAdminToken() },
+});
 
-export default function ProductsAdmin(){
-  const { api, clearToken } = useAdmin();
-  const nav = useNavigate();
+const emptyForm = {
+  name: '',
+  priceUSD: '',
+  stock: '',
+  image: '',
+  description: '',
+  sku: '',
+  category: 'accesorios',
+};
+
+export default function ProductsAdmin() {
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadErr, setUploadErr] = useState("");
+  const [err, setErr] = useState('');
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [q, setQ] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
-  const load = async()=> {
+  const headers = useMemo(
+    () => ({ headers: { 'x-admin-token': getAdminToken() } }),
+    []
+  );
+
+  const fetchAll = async () => {
+    setLoading(true);
+    setErr('');
     try {
-      setLoading(true);
-      const r = await api.get("/products");
-      setItems(r.data);
+      const { data } = await api.get('/products', headers);
+      setItems(data || []);
     } catch (e) {
-      if (e?.response?.status === 401) {
-        clearToken(); nav("/admin/login"); return;
-      }
-      console.error(e);
+      setErr('No se pudo cargar la lista de productos.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(()=>{ load(); }, []);
+  useEffect(() => {
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = useMemo(() => {
+    return (items || [])
+      .filter(p => !categoryFilter || p.category === categoryFilter)
+      .filter(p => !q || (p.name || '').toLowerCase().includes(q.toLowerCase()));
+  }, [items, q, categoryFilter]);
+
+  const onUploadImage = async (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const { data } = await axios.post('/api/admin/upload', fd, {
+      headers: {
+        'x-admin-token': getAdminToken(),
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data?.url;
+  };
 
   const onCreate = async (e) => {
     e.preventDefault();
-    setMsg("");
     try {
-      const body = { ...form, priceUSD: Number(form.priceUSD||0), stock: Number(form.stock||0) };
-      await api.post("/products", body);
-      setForm(empty);
-      setMsg("✅ Producto creado");
-      await load();
+      const payload = {
+        ...form,
+        priceUSD: Number(form.priceUSD || 0),
+        stock: Number(form.stock || 0),
+      };
+      const { data } = await api.post('/products', payload, headers);
+      setItems([data, ...items]);
+      setForm(emptyForm);
+      alert('Producto creado.');
     } catch (e) {
-      if (e?.response?.status === 401) {
-        clearToken(); nav("/admin/login"); return;
-      }
-      setMsg("❌ Error al crear");
+      alert('Error al crear producto. Verificá los campos.');
     }
   };
 
-  const onUpdate = async (id, patch) => {
-    setMsg("");
+  const onSaveEdit = async (id, row) => {
     try {
-      await api.put(`/products/${id}`, patch);
-      setMsg("✅ Producto actualizado");
-      await load();
+      const payload = {
+        ...row,
+        priceUSD: Number(row.priceUSD || 0),
+        stock: Number(row.stock || 0),
+      };
+      const { data } = await api.put(`/products/${id}`, payload, headers);
+      setItems(items.map(it => (it._id === id ? data : it)));
+      setEditingId(null);
     } catch (e) {
-      if (e?.response?.status === 401) {
-        clearToken(); nav("/admin/login"); return;
-      }
-      setMsg("❌ Error al actualizar");
+      alert('No se pudo guardar.');
     }
   };
 
   const onDelete = async (id) => {
-    if (!confirm("¿Borrar producto?")) return;
+    if (!window.confirm('¿Eliminar producto?')) return;
     try {
-      await api.delete(`/products/${id}`);
-      setMsg("🗑️ Producto borrado");
-      await load();
-    } catch (e) {
-      if (e?.response?.status === 401) {
-        clearToken(); nav("/admin/login"); return;
-      }
-      setMsg("❌ Error al borrar");
+      await api.delete(`/products/${id}`, headers);
+      setItems(items.filter(it => it._id !== id));
+    } catch {
+      alert('No se pudo eliminar.');
     }
   };
-
-  const onFile = async (file) => {
-    if (!file) return;
-    setUploadErr("");
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      // usamos el mismo api (con header x-admin-token) pero a /upload
-      const r = await api.post("/upload", fd, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      // seteamos la URL en el form.image
-      setForm(v => ({ ...v, image: r.data?.url || "" }));
-      setMsg("✅ Imagen subida");
-    } catch (e) {
-      console.error(e);
-      setUploadErr("❌ Error al subir imagen (tipo permitido: JPG/PNG/WebP, máx 5MB)");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  if (loading) return <p>Cargando…</p>;
 
   return (
-    <div style={{ display:"grid", gap:16, maxWidth:1000, margin:"0 auto" }}>
-      <AdminBar onLogout={() => { clearToken(); nav("/admin/login"); }} />
-      <h1>Admin · Productos</h1>
-      {msg && <div style={{ color: msg.startsWith("❌") ? "tomato" : "green" }}>{msg}</div>}
+    <div className="container">
+      <h2>Productos</h2>
 
-      <section style={{ border:"1px solid #ddd", borderRadius:12, padding:12 }}>
-        <h3>Crear producto</h3>
-        <form onSubmit={onCreate} style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-          <input placeholder="Nombre" value={form.name} onChange={e=>setForm(v=>({...v, name:e.target.value}))}/>
-          <input placeholder="Precio USD" type="number" value={form.priceUSD} onChange={e=>setForm(v=>({...v, priceUSD:e.target.value}))}/>
-          <input placeholder="Stock" type="number" value={form.stock} onChange={e=>setForm(v=>({...v, stock:e.target.value}))}/>
-
-          {/* URL de imagen */}
-          <input placeholder="Imagen (URL)" value={form.image} onChange={e=>setForm(v=>({...v, image:e.target.value}))}/>
-
-          {/* Subir archivo desde PC */}
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>onFile(e.target.files?.[0])}/>
-            {uploading && <span>Subiendo…</span>}
-          </div>
-          {uploadErr && <div style={{ gridColumn:"1 / span 2", color:"tomato" }}>{uploadErr}</div>}
-
-          <input placeholder="SKU" value={form.sku} onChange={e=>setForm(v=>({...v, sku:e.target.value}))}/>
-          <input placeholder="Categoría" value={form.category} onChange={e=>setForm(v=>({...v, category:e.target.value}))}/>
-          <textarea placeholder="Descripción" style={{ gridColumn:"1 / span 2" }} value={form.description} onChange={e=>setForm(v=>({...v, description:e.target.value}))}/>
-
-          {/* Preview */}
-          {form.image && (
-            <div style={{ gridColumn:"1 / span 2" }}>
-              <div style={{ fontSize:12, opacity:.8, marginBottom:6 }}>Preview</div>
-              <img src={form.image} alt="preview" style={{ maxWidth:260, borderRadius:8 }} />
-            </div>
-          )}
-
-          <div style={{ gridColumn:"1 / span 2" }}>
-            <button type="submit" disabled={uploading}>Crear</button>
-          </div>
+      <section className="card">
+        <h3>Nuevo producto</h3>
+        <form className="grid" onSubmit={onCreate}>
+          <input placeholder="Nombre" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+          <input type="number" placeholder="Precio USD" value={form.priceUSD} onChange={e => setForm({ ...form, priceUSD: e.target.value })} required />
+          <input type="number" placeholder="Stock" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
+          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} required>
+            {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+          <input placeholder="SKU (opcional)" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} />
+          <input placeholder="URL de imagen" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} />
+          <label className="upload">
+            Subir imagen…
+            <input type="file" accept="image/*" onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                const url = await onUploadImage(f);
+                setForm({ ...form, image: url });
+              }
+            }} />
+          </label>
+          <textarea placeholder="Descripción" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} />
+          <button className="btn" type="submit">Crear</button>
         </form>
       </section>
 
-      <section style={{ border:"1px solid #ddd", borderRadius:12, padding:12 }}>
+      <section className="card">
         <h3>Listado</h3>
-        <div style={{ display:"grid", gap:12 }}>
-          {items.map(p=>(
-            <div key={p._id} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 2fr 2fr auto", gap:8, alignItems:"center", borderBottom:"1px solid #eee", paddingBottom:10 }}>
-              <input defaultValue={p.name} onBlur={e=>onUpdate(p._id, { name:e.target.value })}/>
-              <input type="number" defaultValue={p.priceUSD} onBlur={e=>onUpdate(p._id, { priceUSD:Number(e.target.value) })}/>
-              <input type="number" defaultValue={p.stock} onBlur={e=>onUpdate(p._id, { stock:Number(e.target.value) })}/>
-              <input defaultValue={p.image||""} onBlur={e=>onUpdate(p._id, { image:e.target.value })}/>
-              <input defaultValue={p.sku||""} onBlur={e=>onUpdate(p._id, { sku:e.target.value })}/>
-              <button onClick={()=>onDelete(p._id)} style={{ background:"#ff6b6b", color:"#fff" }}>Borrar</button>
-            </div>
-          ))}
+        <div className="toolbar">
+          <input placeholder="Buscar por nombre…" value={q} onChange={e => setQ(e.target.value)} />
+          <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+            <option value="">Todas las categorías</option>
+            {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+          <button onClick={fetchAll}>Actualizar</button>
         </div>
+
+        {loading ? <p>Cargando…</p> : err ? <p style={{color:'crimson'}}>{err}</p> : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio USD</th>
+                <th>Stock</th>
+                <th>Categoría</th>
+                <th>SKU</th>
+                <th style={{width: '28%'}}>Descripción</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => (
+                <Row
+                  key={p._id}
+                  item={p}
+                  editingId={editingId}
+                  setEditingId={setEditingId}
+                  onSave={onSaveEdit}
+                  onDelete={onDelete}
+                  onUploadImage={onUploadImage}
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
+
+      <style>{`
+        .container{max-width:1100px;margin:0 auto;padding:1rem}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:1rem;margin-bottom:1rem}
+        .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+        .grid textarea{grid-column:1 / -1}
+        .upload input[type=file]{display:none}
+        .toolbar{display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem}
+        .table{width:100%;border-collapse:collapse}
+        .table th,.table td{border-top:1px solid #eee;padding:.5rem;vertical-align:top}
+        .thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#f5f5f5}
+        .btn{background:#111;color:#fff;border:none;border-radius:8px;padding:.5rem .8rem;cursor:pointer}
+      `}</style>
     </div>
+  );
+}
+
+function Row({ item, editingId, setEditingId, onSave, onDelete, onUploadImage }) {
+  const [row, setRow] = useState(item);
+
+  useEffect(() => { setRow(item); }, [item]);
+
+  const isEditing = editingId === item._id;
+
+  return (
+    <tr>
+      <td>
+        <img className="thumb" src={row.image || '/placeholder.png'} alt={row.name} />
+        {isEditing && (
+          <>
+            <input
+              type="text"
+              placeholder="URL img"
+              value={row.image || ''}
+              onChange={e => setRow({ ...row, image: e.target.value })}
+              style={{ width: '100%' }}
+            />
+            <input type="file" accept="image/*" onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                const url = await onUploadImage(f);
+                setRow({ ...row, image: url });
+              }
+            }} />
+          </>
+        )}
+      </td>
+      <td>
+        {isEditing ? (
+          <input value={row.name || ''} onChange={e => setRow({ ...row, name: e.target.value })} />
+        ) : row.name}
+      </td>
+      <td>
+        {isEditing ? (
+          <input type="number" value={row.priceUSD ?? ''} onChange={e => setRow({ ...row, priceUSD: e.target.value })} />
+        ) : (row.priceUSD ?? 0)}
+      </td>
+      <td>
+        {isEditing ? (
+          <input type="number" value={row.stock ?? ''} onChange={e => setRow({ ...row, stock: e.target.value })} />
+        ) : (row.stock ?? 0)}
+      </td>
+      <td>
+        {isEditing ? (
+          <select value={row.category || 'accesorios'} onChange={e => setRow({ ...row, category: e.target.value })}>
+            {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+        ) : <span style={{textTransform:'capitalize'}}>{row.category}</span>}
+      </td>
+      <td>
+        {isEditing ? (
+          <input value={row.sku || ''} onChange={e => setRow({ ...row, sku: e.target.value })} />
+        ) : (row.sku || '—')}
+      </td>
+      <td>
+        {isEditing ? (
+          <textarea rows={3} value={row.description || ''} onChange={e => setRow({ ...row, description: e.target.value })} />
+        ) : (row.description || '—')}
+      </td>
+      <td>
+        {isEditing ? (
+          <>
+            <button className="btn" onClick={() => onSave(item._id, row)}>Guardar</button>{' '}
+            <button onClick={() => setEditingId(null)}>Cancelar</button>
+          </>
+        ) : (
+          <>
+            <button className="btn" onClick={() => setEditingId(item._id)}>Editar</button>{' '}
+            <button onClick={() => onDelete(item._id)}>Eliminar</button>
+          </>
+        )}
+      </td>
+    </tr>
   );
 }
