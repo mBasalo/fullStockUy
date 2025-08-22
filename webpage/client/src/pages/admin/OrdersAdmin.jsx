@@ -9,7 +9,7 @@ function AdminBar({ onLogout }){
     <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:12 }}>
       <Link to="/admin/products">Productos</Link>
       <Link to="/admin/orders">Órdenes</Link>
-      <button onClick={onLogout} className="btn-outline" style={{ marginLeft:"auto" }}>Cerrar sesión</button>
+      {/* <button onClick={onLogout} className="btn-outline" style={{ marginLeft:"auto" }}>Cerrar sesdión</button> */}
     </div>
   );
 }

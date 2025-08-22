@@ -11,6 +11,7 @@ import Shipping from "./pages/legal/Shipping";
 import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
 import Order from "./pages/Order";
+import Navbar from "./components/Navbar";
 
 // Admin
 import AdminLogin from "./pages/admin/Login";
@@ -21,16 +22,19 @@ import { AdminProvider } from "./admin/Auth";
 export default function App() {
   return (
     <main className="container">
-      <header className="header">
+      {/* <header className="header">
         <Link to="/" className="brand">Fullstock</Link>
         <nav className="nav">
           <Link to="/">Productos</Link>
           <Link to="/cart">Carrito</Link>
           <Link to="/admin/products">Admin</Link>
         </nav>
-      </header>
+      </header> */}
 
       <AdminProvider>
+
+              <Navbar />
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
