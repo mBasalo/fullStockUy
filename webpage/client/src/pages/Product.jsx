@@ -1,8 +1,8 @@
-// client/src/pages/Product.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../store/cart.jsx";
+import { toast } from "react-toastify";   // 👈 importamos Toastify
 
 const formatUSD = (n) => `USD ${Number(n || 0).toFixed(2)}`;
 
@@ -64,10 +64,13 @@ export default function Product() {
         <div className="mt-lg">
           <button
             className="btn product-add"
-            onClick={(e) => {
-              add(p, 1);
-              e.currentTarget.classList.add("added"); // animación pop
-              setTimeout(() => e.currentTarget.classList.remove("added"), 350);
+     onClick={(e) => {
+  add(p, 1);
+  e.currentTarget.classList.add("added");
+  setTimeout(() => e.currentTarget.classList.remove("added"), 100);
+toast("✅ Producto agregado al carrito", {
+  style: { background: "#18cd18ff", color: "#fff", fontWeight: "600" },
+});
             }}
           >
             Agregar al carrito

@@ -1,5 +1,5 @@
 // client/src/App.jsx
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
@@ -19,21 +19,15 @@ import ProductsAdmin from "./pages/admin/ProductsAdmin";
 import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import { AdminProvider } from "./admin/Auth";
 
+// Toastify
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function App() {
   return (
     <main className="container">
-      {/* <header className="header">
-        <Link to="/" className="brand">Fullstock</Link>
-        <nav className="nav">
-          <Link to="/">Productos</Link>
-          <Link to="/cart">Carrito</Link>
-          <Link to="/admin/products">Admin</Link>
-        </nav>
-      </header> */}
-
       <AdminProvider>
-
-              <Navbar />
+        <Navbar />
 
         <Routes>
           <Route path="/" element={<Home />} />
@@ -54,6 +48,20 @@ export default function App() {
         </Routes>
 
         <Footer />
+
+        {/* 🔹 Contenedor global de toasts */}
+       <ToastContainer
+          position="top-center"   // 👈 centro arriba
+          autoClose={1250}        // 👈 mitad de tiempo
+          hideProgressBar={true}  // sin barra de progreso
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss={false}
+          draggable
+          pauseOnHover={false}
+          theme="colored"
+        />
       </AdminProvider>
     </main>
   );

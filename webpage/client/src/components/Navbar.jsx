@@ -10,18 +10,20 @@ import {
   faPhone,
   faShoppingCart,
   faList,
-  faBars,     // hamburguesa
-  faTimes     // cerrar
+  faBars,
+  faTimes
 } from "@fortawesome/free-solid-svg-icons";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";
 import { CATEGORIES } from "../constants/categories";
 import logo from "../assets/logo-fullstock.png";
+import { useCart } from "../store/cart.jsx";   // 👈 importamos el carrito
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
   const [menuOpen, setMenuOpen] = useState(false);
+  const { items } = useCart();                 // 👈 accedemos al estado del carrito
 
   useEffect(() => {
     setQ(params.get("q") || "");
@@ -32,7 +34,7 @@ export default function Navbar() {
     if (key) next.set("category", key);
     else next.delete("category");
     navigate({ pathname: "/", search: next.toString() });
-    setMenuOpen(false); // cerrar menú en mobile
+    setMenuOpen(false);
   };
 
   const onSearch = (e) => {
@@ -42,6 +44,9 @@ export default function Navbar() {
     else next.delete("q");
     navigate({ pathname: "/", search: next.toString() });
   };
+
+  // 👇 cantidad total de productos en el carrito
+  const cartCount = items.reduce((sum, x) => sum + (x.qty || 0), 0);
 
   return (
     <header className="ws-header">
@@ -79,22 +84,16 @@ export default function Navbar() {
             <FontAwesomeIcon icon={faPhone} />
             <span className="ws-phone">098&nbsp;671&nbsp;812</span>
           </a>
-          <Link className="ws-quick-item" to="/cart" aria-label="Carrito" title="Carrito">
-            <FontAwesomeIcon icon={faShoppingCart} />
-          </Link>
 
-          {/* 🔹 Botón hamburguesa (visible solo en mobile) */}
-          {/* <button
-            className="ws-burger"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Abrir menú"
-          >
-            <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
-          </button> */}
+          {/* 👇 Carrito con badge */}
+          <Link className="ws-quick-item cart-link" to="/cart" aria-label="Carrito" title="Carrito">
+            <FontAwesomeIcon icon={faShoppingCart} />
+            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+          </Link>
         </nav>
       </div>
 
-      {/* 🔹 Categorías (desktop siempre visibles, mobile colapsables) */}
+      {/* 🔹 Categorías */}
       <div className={`ws-cats ${menuOpen ? "open" : ""}`}>
         <button onClick={() => goCategory(null)} className="ws-cat">
           <span className="ws-cat-icon">

@@ -19,10 +19,25 @@ export function CartProvider({ children }) {
         : [...prev, {...p, qty}];
     });
   };
+
+  const decrement = (id) => {
+    setItems(prev => {
+      return prev
+        .map(x => x._id === id ? {...x, qty: x.qty - 1} : x)
+        .filter(x => x.qty > 0); // 👈 elimina si llega a 0
+    });
+  };
+
   const remove = id => setItems(prev => prev.filter(x => x._id !== id));
   const setQty = (id, qty) => setItems(prev => prev.map(x => x._id===id ? {...x, qty: Math.max(1, qty)} : x));
   const clear = () => setItems([]);
-  const total = items.reduce((s,x)=> s + Number(x.priceUSD || 0) * Number(x.qty || 0), 0);
 
-  return <CartCtx.Provider value={{ items, add, remove, setQty, clear, total }}>{children}</CartCtx.Provider>;
+  const total = items.reduce((s,x)=> s + Number(x.priceUSD || 0) * Number(x.qty || 0), 0);
+  const count = items.reduce((s,x)=> s + Number(x.qty || 0), 0);
+
+  return (
+    <CartCtx.Provider value={{ items, add, decrement, remove, setQty, clear, total, count }}>
+      {children}
+    </CartCtx.Provider>
+  );
 }
