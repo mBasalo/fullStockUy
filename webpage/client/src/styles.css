@@ -884,7 +884,6 @@ button { font: inherit; cursor: pointer; }
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 20px;
-  margin-top: 20px;
 }
 @media (max-width: 900px) {
   .catalog-layout { grid-template-columns: 1fr; }
@@ -919,3 +918,12 @@ button { font: inherit; cursor: pointer; }
 @media (max-width: 480px) {
   .products-grid { grid-template-columns: 1fr; }
 }
+
+
+/* === Scroll solo para la grilla de productos en Home === */
+.products-grid.scrollable {
+  max-height: 960px;  /* ajustá este alto para que entren ~6 cards */
+  overflow-y: auto;
+  padding-right: 6px;  /* espacio para el scroll */
+}
+

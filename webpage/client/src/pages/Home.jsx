@@ -79,7 +79,7 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Grilla de productos */}
+      {/* Grilla de productos con scroll */}
       <main className="catalog-main">
         {(!items || items.length === 0) ? (
           <div style={{ padding: "2rem 0" }}>
@@ -91,7 +91,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="products-grid">
+          <div className="products-grid scrollable">
             {items.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
