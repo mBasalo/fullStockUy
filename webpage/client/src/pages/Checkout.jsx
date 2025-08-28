@@ -81,15 +81,16 @@ export default function Checkout(){
   }
 
   return (
-    <div>
+    <div className="checkout-page">
       <h1>Checkout</h1>
 
       {!orderId ? (
         <>
-          <section className="card" style={{ marginBottom:16 }}>
+          {/* Datos comprador */}
+          <section className="card checkout-card">
             <h3>Datos del comprador</h3>
             <div className="space" />
-            <div style={{ display:"grid", gap:10, maxWidth: 480 }}>
+            <div className="form-grid">
               <label>
                 <div className="help">Nombre y Apellido</div>
                 <input
@@ -116,7 +117,7 @@ export default function Checkout(){
               </label>
 
               <label>
-                <div className="help">Email (opcional, para recibir comprobante)</div>
+                <div className="help">Email (opcional)</div>
                 <input
                   className="input"
                   placeholder="tucorreo@dominio.com"
@@ -141,28 +142,32 @@ export default function Checkout(){
             </div>
           </section>
 
-          <section className="card">
+          {/* Resumen + QR */}
+          <section className="card checkout-card">
             <h3>Resumen</h3>
             <div className="space" />
             {(items || []).map(it => (
-              <div key={it._id} style={{ display:"grid", gridTemplateColumns:"1fr auto auto", gap:12, padding:"8px 0" }}>
+              <div key={it._id} className="checkout-item">
                 <div>{it.name}</div>
-                <div style={{ textAlign:"right" }}>x{it.qty}</div>
-                <div style={{ textAlign:"right" }}>{formatUSD(it.priceUSD)}</div>
+                <div>x{it.qty}</div>
+                <div>{formatUSD(it.priceUSD)}</div>
               </div>
             ))}
-            <div className="space" />
-            <div style={{ textAlign:"right", fontWeight:600 }}>Total: {formatUSD(total)}</div>
+            <div className="checkout-total">Total: {formatUSD(total)}</div>
 
             {PAYMENT_INFO?.showQR && (
-              <div style={{ marginTop: 16 }}>
-                <img src={PAYMENT_INFO.qrImagePath} alt="QR de pago" style={{ maxWidth: 260, width:"100%", borderRadius:12 }} />
-                <div className="help" style={{ marginTop:4 }}>(Escaneá el QR para pagar)</div>
+              <div className="checkout-qr">
+                <img
+                  src={PAYMENT_INFO.qrImagePath || "/placeholder-qr.png"}
+                  alt="QR de pago"
+                />
+                <div className="help">(Escaneá el QR para pagar)</div>
               </div>
             )}
           </section>
 
-          <div style={{ display:"flex", gap:12, marginTop:16 }}>
+          {/* Botones */}
+          <div className="checkout-actions">
             <button className="btn" onClick={createOrder} disabled={loading || formInvalid}>
               {loading ? "Creando orden..." : "Confirmar pedido"}
             </button>

@@ -40,3 +40,56 @@
 .read-the-docs {
   color: #888;
 }
+
+/* === CHECKOUT === */
+.checkout-page {
+  margin-top: 20px;
+  display: grid;
+  gap: 20px;
+}
+
+.checkout-card {
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 14px;
+  max-width: 500px;
+}
+
+.checkout-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.checkout-item:last-child {
+  border-bottom: none;
+}
+
+.checkout-total {
+  margin-top: 12px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.checkout-qr {
+  margin-top: 20px;
+  text-align: center;
+}
+.checkout-qr img {
+  max-width: 200px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.checkout-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
